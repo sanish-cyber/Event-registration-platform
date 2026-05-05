@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Events - College Event Registration System</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<canvas id="particleCanvas"></canvas>
+    <div class="page-wrapper">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="navbar-container">
+                <a href="index.html" class="navbar-brand">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>EventHub</span>
+                </a>
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="navbar-menu" id="navbarMenu"></div>
+                <div class="navbar-user" id="navbarUser"></div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="container">
+                <div class="d-flex align-center justify-between mb-4" style="flex-wrap: wrap; gap: 1rem;">
+                    <h1>Manage Events</h1>
+                    <button class="btn btn-primary" onclick="showEventForm()">
+                        <i class="fas fa-plus"></i> Create Event
+                    </button>
+                </div>
+
+                <!-- Event Form -->
+                <div class="card mb-4" id="eventFormCard" style="display: none;">
+                    <div class="card-header">
+                        <h3 class="card-title" id="eventFormTitle">Create New Event</h3>
+                        <button class="btn btn-sm btn-secondary" onclick="hideEventForm()">Cancel</button>
+                    </div>
+                    <div class="card-body">
+                        <form id="eventForm" onsubmit="saveEvent(event)">
+                            <input type="hidden" id="eventId">
+                            
+                            <div class="form-group">
+                                <label class="form-label">Event Title *</label>
+                                <input type="text" class="form-control" id="eventTitle" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">Description</label>
+                                <textarea class="form-control" id="eventDescription" rows="4"></textarea>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Date *</label>
+                                    <input type="date" class="form-control" id="eventDate" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Start Time *</label>
+                                    <input type="time" class="form-control" id="eventStartTime" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">End Time *</label>
+                                    <input type="time" class="form-control" id="eventEndTime" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Location *</label>
+                                    <input type="text" class="form-control" id="eventLocation" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Category</label>
+                                    <select class="form-control" id="eventCategory">
+                                        <option value="academic">Academic</option>
+                                        <option value="cultural">Cultural</option>
+                                        <option value="sports">Sports</option>
+                                        <option value="workshop">Workshop</option>
+                                        <option value="seminar">Seminar</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group" style="margin-bottom:1rem;">
+                                <label class="form-label">Event Background / Cover Image</label>
+                                <input type="file" id="eventImageUrlInput" accept="image/*" style="display:none;">
+                                <button type="button" class="btn btn-outline" onclick="document.getElementById('eventImageUrlInput').click()">
+                                    <i class="fas fa-upload"></i> Upload Cover Image
+                                </button>
+                                <p class="form-hint">This image will appear prominently on event cards. Leave blank to use category defaults. Max size 2MB.</p>
+                                
+                                <div id="imagePreviewBox" style="display:none; margin-top:0.75rem;">
+                                    <p class="form-label">Cover Preview:</p>
+                                    <img id="imagePreviewImg" src="" alt="Cover Preview"
+                                         style="width:100px; max-height:100px; object-fit:cover; border-radius:0.5rem; border:2px solid rgba(99,102,241,0.4); padding:4px;">
+                                    <br>
+                                    <button type="button" class="btn btn-sm btn-danger" style="margin-top:0.5rem;" onclick="clearEventImage()">
+                                        <i class="fas fa-times"></i> Remove Cover
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label class="form-label">Max Attendees</label>
+                                    <input type="number" class="form-control" id="eventMaxAttendees" value="100" min="1">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Status</label>
+                                    <select class="form-control" id="eventStatus">
+                                        <option value="true">Active</option>
+                                        <option value="false">Inactive</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- 💳 PAYMENT SECTION -->
+                            <div style="border: 1px solid rgba(99,102,241,0.3); border-radius:0.75rem; padding:1.25rem; margin-bottom:1rem; background:rgba(99,102,241,0.05);">
+                                <div class="d-flex align-center" style="gap:0.75rem; margin-bottom:1rem;">
+                                    <input type="checkbox" id="eventIsPaid" style="width:18px;height:18px;accent-color:#6366f1;cursor:pointer;">
+                                    <label for="eventIsPaid" class="form-label" style="margin:0;cursor:pointer;">
+                                        <i class="fas fa-qrcode" style="color:#6366f1;"></i>
+                                        This is a paid event (requires QR payment)
+                                    </label>
+                                </div>
+
+                                <div id="paymentFields" style="display:none;">
+                                    <div class="form-group">
+                                        <label class="form-label">Ticket Price (₹)</label>
+                                        <input type="number" class="form-control" id="eventPrice" min="1" step="0.01" placeholder="e.g. 299">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">Payment QR Code Image</label>
+                                        <input type="file" id="qrFileInput" accept="image/*" style="display:none;">
+                                        <button type="button" class="btn btn-outline" onclick="document.getElementById('qrFileInput').click()">
+                                            <i class="fas fa-upload"></i> Upload QR Image
+                                        </button>
+                                        <p class="form-hint">Upload a screenshot of your UPI/PhonePe/GPay QR code</p>
+                                    </div>
+
+                                    <div id="qrPreviewBox" style="display:none; margin-top:0.75rem;">
+                                        <p class="form-label">QR Preview:</p>
+                                        <img id="qrPreviewImg" src="" alt="QR Preview"
+                                             style="max-width:200px; border-radius:0.5rem; border:2px solid rgba(99,102,241,0.4); padding:4px;">
+                                        <br>
+                                        <button type="button" class="btn btn-sm btn-danger" style="margin-top:0.5rem;" onclick="clearQr()">
+                                            <i class="fas fa-times"></i> Remove QR
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Event
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Events List -->
+                <div class="card" style="margin-bottom:1.5rem;">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="fas fa-clock" style="color:#f59e0b;"></i> Pending Payments</h3>
+                        <button class="btn btn-sm btn-outline" onclick="loadPendingPayments()" id="refreshPendingBtn">
+                            <i class="fas fa-sync"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="card-body" id="pendingPaymentsContainer">
+                        <p class="text-muted">Loading...</p>
+                    </div>
+                </div>
+
+                <!-- Events List -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">My Events</h3>
+                    </div>
+                    <div class="card-body" id="myEventsContainer">
+                        <div class="loading"><div class="spinner"></div></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer style="background: var(--gray-800); color: var(--gray-300); padding: 2rem 0; margin-top: auto;">
+            <div class="container text-center">
+                <p>&copy; 2026 College Event Registration System. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let editingEventId = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!auth.requireRole(['organizer', 'admin'])) return;
+
+            await loadMyEvents();
+            await loadPendingPayments();
+
+            // Check if editing
+            const params = new URLSearchParams(window.location.search);
+            const editId = params.get('edit');
+            if (editId) editEvent(editId);
+        });
+
+        async function loadMyEvents() {
+            const container = document.getElementById('myEventsContainer');
+            
+            try {
+                const events = await api.events.getMyEvents();
+
+                if (events.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon"><i class="fas fa-calendar-plus"></i></div>
+                            <h3>No events yet</h3>
+                            <p>Create your first event to get started!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Event</th>
+                                    <th>Date</th>
+                                    <th>Location</th>
+                                    <th>Registrations</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${events.map(event => `
+                                    <tr>
+                                        <td>
+                                            <strong>${escapeHtml(event.title)}</strong>
+                                            <br><small class="text-muted">${event.category}</small>
+                                        </td>
+                                        <td>${eventUtils.formatDate(event.event_date)}</td>
+                                        <td>${escapeHtml(event.location)}</td>
+                                        <td>
+                                            <span class="badge badge-info">${event.registered_count || 0} / ${event.max_attendees}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge badge-${event.is_active ? 'success' : 'warning'}">
+                                                ${event.is_active ? 'Active' : 'Inactive'}
+                                            </span>
+                                        </td>
+                                        <td class="table-actions">
+                                            <button class="btn btn-sm btn-secondary" onclick="viewAttendees(${event.id})" title="View Attendees">
+                                                <i class="fas fa-users"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-primary" onclick="editEvent(${event.id})" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="deleteEvent(${event.id})" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading events:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <h3>Failed to load events</h3>
+                        <button class="btn btn-primary" onclick="loadMyEvents()">Retry</button>
+                    </div>
+                `;
+            }
+        }
+
+        function showEventForm() {
+            document.getElementById('eventFormCard').style.display = 'block';
+            document.getElementById('eventFormTitle').textContent = 'Create New Event';
+            document.getElementById('eventForm').reset();
+            document.getElementById('eventId').value = '';
+            clearEventImage();
+            editingEventId = null;
+            
+            // Scroll to form
+            document.getElementById('eventFormCard').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function hideEventForm() {
+            document.getElementById('eventFormCard').style.display = 'none';
+            document.getElementById('eventForm').reset();
+            editingEventId = null;
+        }
+
+        async function editEvent(id) {
+            try {
+                const event = await api.events.getById(id);
+                
+                document.getElementById('eventFormCard').style.display = 'block';
+                document.getElementById('eventFormTitle').textContent = 'Edit Event';
+                
+                document.getElementById('eventId').value = event.id;
+                document.getElementById('eventTitle').value = event.title;
+                document.getElementById('eventDescription').value = event.description || '';
+                document.getElementById('eventDate').value = event.event_date.split('T')[0];
+                document.getElementById('eventStartTime').value = event.start_time;
+                document.getElementById('eventEndTime').value = event.end_time;
+                document.getElementById('eventLocation').value = event.location;
+                document.getElementById('eventCategory').value = event.category;
+                document.getElementById('eventMaxAttendees').value = event.max_attendees;
+                document.getElementById('eventStatus').value = event.is_active.toString();
+                
+                // Restore event cover image
+                if (event.image_url) {
+                    currentEventImageBase64 = event.image_url;
+                    document.getElementById('imagePreviewImg').src = currentEventImageBase64;
+                    document.getElementById('imagePreviewBox').style.display = 'block';
+                } else {
+                    clearEventImage();
+                }
+
+                // Restore payment fields
+                const isPaid = !!event.is_paid;
+                document.getElementById('eventIsPaid').checked = isPaid;
+                document.getElementById('paymentFields').style.display = isPaid ? 'block' : 'none';
+                if (isPaid) {
+                    document.getElementById('eventPrice').value = event.price || '';
+                    if (event.payment_qr) {
+                        currentQrBase64 = event.payment_qr;
+                        document.getElementById('qrPreviewImg').src = event.payment_qr;
+                        document.getElementById('qrPreviewBox').style.display = 'block';
+                    }
+                }
+                
+                editingEventId = id;
+                document.getElementById('eventFormCard').scrollIntoView({ behavior: 'smooth' });
+            } catch (error) {
+                showToast('Failed to load event details', 'error');
+            }
+        }
+
+        async function saveEvent(e) {
+            e.preventDefault();
+
+            const isPaid = document.getElementById('eventIsPaid').checked;
+            const eventData = {
+                title: document.getElementById('eventTitle').value,
+                description: document.getElementById('eventDescription').value,
+                eventDate: document.getElementById('eventDate').value,
+                startTime: document.getElementById('eventStartTime').value,
+                endTime: document.getElementById('eventEndTime').value,
+                location: document.getElementById('eventLocation').value,
+                category: document.getElementById('eventCategory').value,
+                maxAttendees: parseInt(document.getElementById('eventMaxAttendees').value),
+                imageUrl: currentEventImageBase64 || null,
+                isActive: document.getElementById('eventStatus').value === 'true',
+                isPaid,
+                price: isPaid ? parseFloat(document.getElementById('eventPrice').value || 0) : 0,
+                paymentQr: isPaid ? (currentQrBase64 || null) : null
+            };
+
+            try {
+                if (editingEventId) {
+                    await api.events.update(editingEventId, eventData);
+                    showToast('Event updated successfully', 'success');
+                } else {
+                    await api.events.create(eventData);
+                    showToast('Event created successfully', 'success');
+                }
+
+                hideEventForm();
+                loadMyEvents();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        async function deleteEvent(id) {
+            if (!confirm('Are you sure you want to delete this event? All registrations will be cancelled.')) return;
+            try {
+                await api.events.delete(id);
+                showToast('Event deleted successfully', 'success');
+                loadMyEvents();
+            } catch (error) {
+                showToast(error.message, 'error');
+            }
+        }
+
+        async function viewAttendees(eventId) {
+            try {
+                const attendees = await api.events.getAttendees(eventId);
+                const rows = attendees.length === 0
+                    ? '<tr><td colspan="5" class="text-center text-muted">No attendees yet</td></tr>'
+                    : attendees.map(a => `
+                        <tr>
+                            <td>${escapeHtml(a.first_name + ' ' + a.last_name)}</td>
+                            <td>${escapeHtml(a.email)}</td>
+                            <td>${escapeHtml(a.department || '—')}</td>
+                            <td>${new Date(a.registration_date).toLocaleDateString()}</td>
+                            <td><span class="badge badge-${a.status === 'registered' ? 'success' : 'warning'}">${a.status}</span></td>
+                        </tr>`).join('');
+                showModal('Attendees', `
+                    <div class="table-container">
+                        <table class="table">
+                            <thead><tr><th>Name</th><th>Email</th><th>Dept</th><th>Registered</th><th>Status</th></tr></thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>`);
+            } catch (e) { showToast('Failed to load attendees', 'error'); }
+        }
+
+        // ── QR Upload Logic ──────────────────────────────────────────────────
+        let currentQrBase64 = null;
+
+        document.getElementById('eventIsPaid').addEventListener('change', function() {
+            document.getElementById('paymentFields').style.display = this.checked ? 'block' : 'none';
+        });
+
+        document.getElementById('qrFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) { showToast('QR image must be under 2MB', 'error'); return; }
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                currentQrBase64 = ev.target.result; // data:image/... base64
+                document.getElementById('qrPreviewImg').src = currentQrBase64;
+                document.getElementById('qrPreviewBox').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function clearQr() {
+            currentQrBase64 = null;
+            document.getElementById('qrFileInput').value = '';
+            document.getElementById('qrPreviewBox').style.display = 'none';
+            document.getElementById('qrPreviewImg').src = '';
+        }
+
+        // ── Cover Image Upload Logic ──────────────────────────────────────────
+        let currentEventImageBase64 = null;
+
+        document.getElementById('eventImageUrlInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) { showToast('Cover image must be under 2MB', 'error'); return; }
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                currentEventImageBase64 = ev.target.result;
+                document.getElementById('imagePreviewImg').src = currentEventImageBase64;
+                document.getElementById('imagePreviewBox').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        });
+
+        function clearEventImage() {
+            currentEventImageBase64 = null;
+            document.getElementById('eventImageUrlInput').value = '';
+            document.getElementById('imagePreviewBox').style.display = 'none';
+            document.getElementById('imagePreviewImg').src = '';
+        }
+
+        // ── Pending Payments Panel ───────────────────────────────────────────
+        async function loadPendingPayments() {
+            const container = document.getElementById('pendingPaymentsContainer');
+            try {
+                const pending = await api.payments.getPendingPayments();
+                if (pending.length === 0) {
+                    container.innerHTML = '<p class="text-muted" style="padding:0.5rem;"><i class="fas fa-check-circle" style="color:#10b981;"></i> No pending payments</p>';
+                    return;
+                }
+                container.innerHTML = `
+                    <div class="table-container">
+                        <table class="table">
+                            <thead><tr><th>Attendee</th><th>Event</th><th>Note</th><th>Actions</th></tr></thead>
+                            <tbody>
+                                ${pending.map(p => `
+                                    <tr>
+                                        <td>${escapeHtml(p.first_name + ' ' + p.last_name)}<br><small class="text-muted">${escapeHtml(p.email)}</small></td>
+                                        <td>${escapeHtml(p.event_title)}</td>
+                                        <td>${escapeHtml(p.payment_note || '—')}</td>
+                                        <td class="table-actions">
+                                            <button class="btn btn-sm btn-success" onclick="verifyPayment(${p.id}, 'approve')">
+                                                <i class="fas fa-check"></i> Approve
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" onclick="verifyPayment(${p.id}, 'reject')">
+                                                <i class="fas fa-times"></i> Reject
+                                            </button>
+                                        </td>
+                                    </tr>`).join('')}
+                            </tbody>
+                        </table>
+                    </div>`;
+            } catch (e) {
+                container.innerHTML = '<p class="text-muted">Failed to load pending payments</p>';
+            }
+        }
+
+        async function verifyPayment(regId, action) {
+            try {
+                await api.payments.verifyPayment(regId, action);
+                showToast(`Payment ${action === 'approve' ? 'approved' : 'rejected'}!`, action === 'approve' ? 'success' : 'info');
+                loadPendingPayments();
+            } catch (e) { showToast(e.message, 'error'); }
+        }
+    </script>
+    <script src="js/3d-effects.js"></script>
+</body>
+</html>

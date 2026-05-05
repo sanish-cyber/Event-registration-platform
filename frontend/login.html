@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - College Event Registration System</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+<canvas id="particleCanvas"></canvas>
+    <div class="auth-page">
+        <div class="auth-card">
+            <div class="auth-header">
+                <a href="index.html" style="color: var(--primary); font-size: 2rem;">
+                    <i class="fas fa-graduation-cap"></i>
+                </a>
+                <h1>Welcome Back</h1>
+                <p>Sign in to your account to continue</p>
+            </div>
+
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label class="form-label">Email Address</label>
+                    <input type="email" class="form-control" id="loginEmail" placeholder="you@example.com" required>
+                    <span class="form-error"></span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Password</label>
+                    <input type="password" class="form-control" id="loginPassword" placeholder="Enter your password" required>
+                    <span class="form-error"></span>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block btn-lg" id="loginBtn">
+                    <span>Sign In</span>
+                </button>
+            </form>
+
+            <div class="auth-footer">
+                Don't have an account? <a href="register.html">Create one</a>
+            </div>
+
+            <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); border-radius: var(--radius); font-size: 0.85rem; color: #94a3b8;">
+                <strong style="color:#a5b4fc;">Demo Accounts:</strong><br>
+                Admin: admin@college.edu / admin123<br>
+                Organizer: organizer@college.edu / organizer123
+            </div>
+        </div>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Redirect if already logged in
+        auth.redirectIfLoggedIn();
+
+        async function handleLogin(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const btn = document.getElementById('loginBtn');
+
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner" style="width: 1.5rem; height: 1.5rem;"></div>';
+
+            try {
+                const response = await api.auth.login(email, password);
+                auth.saveSession(response.token, response.user);
+                showToast('Login successful!', 'success');
+                
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 500);
+            } catch (error) {
+                showToast(error.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<span>Sign In</span>';
+            }
+        }
+    </script>
+    <script src="js/3d-effects.js"></script>
+</body>
+</html>

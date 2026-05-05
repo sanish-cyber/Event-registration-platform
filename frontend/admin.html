@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - College Event Registration System</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="[cdnjs.cloudflare.com](https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css)">
+    <link href="[fonts.googleapis.com](https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap)" rel="stylesheet">
+</head>
+<body>
+    <div class="page-wrapper">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="navbar-container">
+                <a href="index.html" class="navbar-brand">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>EventHub</span>
+                </a>
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="navbar-menu" id="navbarMenu"></div>
+                <div class="navbar-user" id="navbarUser"></div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="container">
+                <div class="d-flex align-center justify-between mb-4" style="flex-wrap: wrap; gap: 1rem;">
+                    <h1>Admin Panel</h1>
+                    <div class="d-flex gap-1">
+                        <button class="btn btn-secondary" onclick="showSendNotificationModal()">
+                            <i class="fas fa-bell"></i> Send Notification
+                        </button>
+                        <button class="btn btn-primary" onclick="showCreateUserModal()">
+                            <i class="fas fa-user-plus"></i> Add User
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Stats Overview -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-card-icon blue"><i class="fas fa-users"></i></div>
+                        <div class="stat-card-content">
+                            <h3 id="statTotalUsers">0</h3>
+                            <p>Total Users</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon purple"><i class="fas fa-calendar"></i></div>
+                        <div class="stat-card-content">
+                            <h3 id="statTotalEvents">0</h3>
+                            <p>Total Events</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon green"><i class="fas fa-ticket-alt"></i></div>
+                        <div class="stat-card-content">
+                            <h3 id="statTotalRegistrations">0</h3>
+                            <p>Registrations</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon orange"><i class="fas fa-calendar-check"></i></div>
+                        <div class="stat-card-content">
+                            <h3 id="statUpcomingEvents">0</h3>
+                            <p>Upcoming Events</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs -->
+                <div class="tabs mt-4">
+                    <button class="tab-btn active" data-tab="users">Users</button>
+                    <button class="tab-btn" data-tab="analytics">Analytics</button>
+                    <button class="tab-btn" data-tab="reports">Reports</button>
+                </div>
+
+                <!-- Users Tab -->
+                <div class="tab-content active" id="tab-users">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">User Management</h3>
+                        </div>
+                        <div class="card-body" id="usersTableContainer">
+                            <div class="loading"><div class="spinner"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Tab -->
+                <div class="tab-content" id="tab-analytics">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">User Breakdown</h3>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex align-center justify-between mb-2">
+                                    <span>Attendees</span>
+                                    <span class="badge badge-success" id="statAttendees">0</span>
+                                </div>
+                                <div class="d-flex align-center justify-between mb-2">
+                                    <span>Organizers</span>
+                                    <span class="badge badge-primary" id="statOrganizers">0</span>
+                                </div>
+                                <div class="d-flex align-center justify-between">
+                                    <span>Admins</span>
+                                    <span class="badge badge-danger" id="statAdmins">0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Events by Category</h3>
+                            </div>
+                            <div class="card-body" id="categoryStats">
+                                <div class="loading"><div class="spinner"></div></div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Recent Registrations</h3>
+                            </div>
+                            <div class="card-body" id="recentRegistrations" style="max-height: 300px; overflow-y: auto;">
+                                <div class="loading"><div class="spinner"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reports Tab -->
+                <div class="tab-content" id="tab-reports">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Generate Reports</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="form-row mb-3">
+                                <div class="form-group">
+                                    <label class="form-label">Start Date</label>
+                                    <input type="date" class="form-control" id="reportStartDate">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">End Date</label>
+                                    <input type="date" class="form-control" id="reportEndDate">
+                                </div>
+                            </div>
+                            <div class="d-flex gap-1" style="flex-wrap: wrap;">
+                                <button class="btn btn-primary" onclick="generateReport('events')">
+                                    <i class="fas fa-calendar"></i> Events Report
+                                </button>
+                                <button class="btn btn-secondary" onclick="generateReport('registrations')">
+                                    <i class="fas fa-ticket-alt"></i> Registrations Report
+                                </button>
+                                <button class="btn btn-secondary" onclick="generateReport('users')">
+                                    <i class="fas fa-users"></i> Users Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer style="background: var(--gray-800); color: var(--gray-300); padding: 2rem 0; margin-top: auto;">
+            <div class="container text-center">
+                <p>&copy; 2025 College Event Registration System. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/admin.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!auth.requireRole('admin')) return;
+
+            loadAdminPanel();
+
+            // Tab switching
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    this.classList.add('active');
+                    document.getElementById(`tab-${this.dataset.tab}`).classList.add('active');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

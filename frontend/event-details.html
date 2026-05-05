@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Event Details — EventHub</title>
+    <meta name="description" content="View event details and register for college events.">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* ── Payment QR Modal ─────────────────────────────────── */
+        .payment-modal-overlay {
+            position: fixed; inset: 0; z-index: 1000;
+            background: rgba(0,0,0,0.75);
+            backdrop-filter: blur(6px);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        .payment-modal-overlay.open {
+            opacity: 1; pointer-events: all;
+        }
+        .payment-modal {
+            background: linear-gradient(135deg,rgba(15,18,40,0.98),rgba(20,20,55,0.98));
+            border: 1px solid rgba(99,102,241,0.4);
+            border-radius: 1.25rem;
+            padding: 2rem;
+            max-width: 460px; width: 90%;
+            box-shadow: 0 0 60px rgba(99,102,241,0.25);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+            text-align: center;
+        }
+        .payment-modal-overlay.open .payment-modal { transform: translateY(0); }
+        .payment-modal h2 { font-size:1.4rem; margin-bottom:0.25rem; }
+        .payment-modal .price-badge {
+            display: inline-block;
+            background: linear-gradient(135deg,#6366f1,#8b5cf6);
+            color: white; font-size: 1.5rem; font-weight:800;
+            padding: 0.4rem 1.2rem; border-radius: 2rem;
+            margin: 0.75rem 0;
+        }
+        .qr-img-wrapper {
+            background: white; border-radius: 0.75rem;
+            padding: 12px; display: inline-block; margin: 1rem 0;
+        }
+        .qr-img-wrapper img { max-width: 220px; display:block; border-radius:0.5rem; }
+        .payment-steps { text-align:left; margin: 1rem 0; }
+        .payment-steps li {
+            display:flex; align-items:flex-start; gap:0.6rem;
+            margin-bottom:0.5rem; font-size:0.9rem; color:#cbd5e1;
+        }
+        .payment-steps li .step-num {
+            background: rgba(99,102,241,0.2); color:#818cf8;
+            border-radius:50%; width:22px; height:22px; min-width:22px;
+            display:flex; align-items:center; justify-content:center;
+            font-size:0.75rem; font-weight:700; margin-top:1px;
+        }
+        .txn-input {
+            width:100%; padding:0.7rem 1rem; border-radius:0.6rem;
+            border:1px solid rgba(99,102,241,0.3);
+            background:rgba(255,255,255,0.05); color:white;
+            font-size:0.9rem; margin:0.5rem 0 1rem;
+            outline:none; transition:border-color 0.2s;
+        }
+        .txn-input:focus { border-color:#6366f1; }
+        .payment-modal .btn-row { display:flex; gap:0.75rem; justify-content:center; }
+        .payment-status-badge {
+            display:inline-flex; align-items:center; gap:0.4rem;
+            padding:0.35rem 0.85rem; border-radius:2rem; font-size:0.82rem; font-weight:600;
+        }
+        .pstatus-pending  { background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); }
+        .pstatus-paid     { background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3); }
+        .pstatus-rejected { background:rgba(239,68,68,0.15);  color:#ef4444; border:1px solid rgba(239,68,68,0.3); }
+        .paid-tag {
+            display:inline-flex; align-items:center; gap:0.4rem;
+            background:rgba(99,102,241,0.15); color:#818cf8;
+            border:1px solid rgba(99,102,241,0.3);
+            padding:0.25rem 0.75rem; border-radius:2rem; font-size:0.82rem; font-weight:600;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="particleCanvas"></canvas>
+    <div class="cursor"></div>
+    <div class="cursor-dot"></div>
+
+    <div class="page-wrapper">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="navbar-container">
+                <a href="index.html" class="navbar-brand">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>EventHub</span>
+                </a>
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="navbar-menu" id="navbarMenu"></div>
+                <div class="navbar-user" id="navbarUser"></div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="container" style="max-width: 800px;">
+                <a href="events.html" class="btn btn-secondary mb-3">
+                    <i class="fas fa-arrow-left"></i> Back to Events
+                </a>
+                <div id="eventDetailsContainer">
+                    <div class="loading"><div class="spinner"></div></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer style="padding: 2rem 0; margin-top: auto;">
+            <div class="container text-center">
+                <p>&copy; 2026 College Event Registration System. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- ══════════════════ CONFIRM MODAL ══════════════════ -->
+    <div class="payment-modal-overlay" id="confirmModalOverlay">
+        <div class="payment-modal" id="confirmModal" style="max-width:400px;">
+            <div style="font-size:2.5rem; margin-bottom:0.5rem;">⚠️</div>
+            <h2 id="confirmModalTitle">Confirm Action</h2>
+            <p id="confirmModalMessage" style="color:#94a3b8; margin:0.75rem 0 1.5rem; font-size:0.95rem;"></p>
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="closeConfirmModal()" style="flex:1;">Keep Registration</button>
+                <button class="btn btn-danger" id="confirmModalConfirmBtn" style="flex:1;">
+                    <i class="fas fa-times"></i> Yes, Cancel It
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════ PAYMENT QR MODAL ══════════════════ -->
+    <div class="payment-modal-overlay" id="paymentModalOverlay">
+        <div class="payment-modal" id="paymentModal">
+            <div style="font-size:2.5rem; margin-bottom:0.5rem;">💳</div>
+            <h2>Complete Payment</h2>
+            <p class="text-muted" style="font-size:0.9rem;" id="payModalEventTitle"></p>
+            <div class="price-badge" id="payModalPrice">₹0</div>
+
+            <div class="qr-img-wrapper">
+                <img id="payModalQrImg" src="" alt="Payment QR Code">
+            </div>
+
+            <ul class="payment-steps">
+                <li>
+                    <span class="step-num">1</span>
+                    <span>Open <strong>PhonePe / Google Pay / Paytm</strong> or any UPI app</span>
+                </li>
+                <li>
+                    <span class="step-num">2</span>
+                    <span>Scan the QR code above and pay <strong id="payModalPriceStep">₹0</strong></span>
+                </li>
+                <li>
+                    <span class="step-num">3</span>
+                    <span>Enter your <strong>Transaction ID / UTR number</strong> below and submit</span>
+                </li>
+            </ul>
+
+            <input type="text" class="txn-input" id="txnNoteInput"
+                   placeholder="Transaction ID / Screenshot note (optional)">
+
+            <div class="btn-row">
+                <button class="btn btn-secondary" onclick="closePaymentModal()">Cancel</button>
+                <button class="btn btn-primary" id="submitPaymentBtn" onclick="submitPaymentConfirmation()">
+                    <i class="fas fa-check-circle"></i> I've Paid, Submit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS -->
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let currentEventId = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const eventId = params.get('id');
+            currentEventId = eventId;
+
+            if (eventId) {
+                loadEventDetails(eventId);
+            } else {
+                document.getElementById('eventDetailsContainer').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <h3>Event not found</h3>
+                        <p>The event you're looking for doesn't exist.</p>
+                        <a href="events.html" class="btn btn-primary">Back to Events</a>
+                    </div>
+                `;
+            }
+        });
+
+        // ── Load event details ────────────────────────────────────────────────
+        async function loadEventDetails(eventId) {
+            const container = document.getElementById('eventDetailsContainer');
+            try {
+                const event = await api.events.getById(eventId);
+                const user = auth.getUser();
+                let isRegistered = false;
+                let paymentStatus = null;
+
+                if (user) {
+                    try {
+                        const regCheck = await api.registrations.checkRegistration(eventId);
+                        isRegistered = regCheck.isRegistered;
+                        paymentStatus = regCheck.paymentStatus || null;
+                    } catch (_) {}
+                }
+
+                const isPaid = !!event.is_paid;
+                const spotsLeft = event.max_attendees - event.current_attendees;
+
+                // Payment status badge
+                let payStatusHtml = '';
+                if (isRegistered && isPaid) {
+                    if (paymentStatus === 'pending_verification') {
+                        payStatusHtml = `<span class="payment-status-badge pstatus-pending"><i class="fas fa-clock"></i> Payment Pending Verification</span>`;
+                    } else if (paymentStatus === 'paid') {
+                        payStatusHtml = `<span class="payment-status-badge pstatus-paid"><i class="fas fa-check-circle"></i> Payment Verified</span>`;
+                    } else if (paymentStatus === 'payment_rejected') {
+                        payStatusHtml = `<span class="payment-status-badge pstatus-rejected"><i class="fas fa-times-circle"></i> Payment Rejected — Re-submit</span>`;
+                    }
+                }
+
+                // Registration button logic
+                let regButtonHtml = '';
+                if (!user) {
+                    regButtonHtml = `<a href="login.html" class="btn btn-primary btn-lg"><i class="fas fa-sign-in-alt"></i> Login to Register</a>`;
+                } else if (isRegistered && (!isPaid || paymentStatus === 'paid')) {
+                    regButtonHtml = `
+                        <span class="badge badge-success" style="font-size:1rem; padding:0.6rem 1.2rem;">
+                            <i class="fas fa-check-circle"></i> Registered
+                        </span>
+                        <button class="btn btn-sm btn-danger" onclick="cancelReg(${event.id})" style="margin-left:0.75rem;">
+                            <i class="fas fa-times"></i> Cancel
+                        </button>`;
+                } else if (isRegistered && (paymentStatus === 'pending_verification')) {
+                    regButtonHtml = `<button class="btn btn-outline btn-lg" disabled><i class="fas fa-hourglass-half"></i> Awaiting Payment Verification</button>`;
+                } else if (isRegistered && paymentStatus === 'payment_rejected') {
+                    regButtonHtml = `<button class="btn btn-primary btn-lg" onclick="openPaymentModal(${event.id})"><i class="fas fa-qrcode"></i> Re-submit Payment</button>`;
+                } else if (spotsLeft <= 0) {
+                    regButtonHtml = `<button class="btn btn-secondary btn-lg" disabled><i class="fas fa-ban"></i> Event Full</button>`;
+                } else if (isPaid) {
+                    regButtonHtml = `<button class="btn btn-primary btn-lg" onclick="registerAndPay(${event.id})">
+                        <i class="fas fa-qrcode"></i> Register & Pay ₹${parseFloat(event.price).toFixed(0)}
+                    </button>`;
+                } else {
+                    regButtonHtml = `<button class="btn btn-primary btn-lg" onclick="registerFree(${event.id})">
+                        <i class="fas fa-ticket-alt"></i> Register Free
+                    </button>`;
+                }
+
+                container.innerHTML = `
+                    <div class="card">
+                        <div style="background:linear-gradient(135deg,rgba(99,102,241,0.3),rgba(139,92,246,0.2));
+                                    height:200px; border-radius:0.75rem 0.75rem 0 0; display:flex;
+                                    align-items:center; justify-content:center; font-size:4rem; margin:-1.5rem -1.5rem 1.5rem;">
+                            ${categoryIcon(event.category)}
+                        </div>
+
+                        <div style="display:flex; flex-wrap:wrap; gap:0.5rem; align-items:center; margin-bottom:1rem;">
+                            <span class="badge badge-info" style="font-size:0.85rem;">${event.category}</span>
+                            ${isPaid ? `<span class="paid-tag"><i class="fas fa-rupee-sign"></i> ₹${parseFloat(event.price).toFixed(0)} Paid Event</span>` : '<span class="badge badge-success" style="font-size:0.85rem;">Free Entry</span>'}
+                            ${payStatusHtml}
+                        </div>
+
+                        <h1 style="margin-bottom:0.5rem;">${escapeHtml(event.title)}</h1>
+                        <p style="color:#94a3b8; margin-bottom:1.5rem;">${escapeHtml(event.description || '')}</p>
+
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
+                            <div class="stat-card" style="padding:1rem;">
+                                <div class="stat-card-icon blue"><i class="fas fa-calendar"></i></div>
+                                <div class="stat-card-content">
+                                    <p style="font-size:0.8rem; color:#94a3b8; margin:0;">Date</p>
+                                    <strong>${eventUtils.formatDate(event.event_date)}</strong>
+                                </div>
+                            </div>
+                            <div class="stat-card" style="padding:1rem;">
+                                <div class="stat-card-icon purple"><i class="fas fa-clock"></i></div>
+                                <div class="stat-card-content">
+                                    <p style="font-size:0.8rem; color:#94a3b8; margin:0;">Time</p>
+                                    <strong>${eventUtils.formatTime(event.start_time)} – ${eventUtils.formatTime(event.end_time)}</strong>
+                                </div>
+                            </div>
+                            <div class="stat-card" style="padding:1rem;">
+                                <div class="stat-card-icon green"><i class="fas fa-map-marker-alt"></i></div>
+                                <div class="stat-card-content">
+                                    <p style="font-size:0.8rem; color:#94a3b8; margin:0;">Location</p>
+                                    <strong>${escapeHtml(event.location)}</strong>
+                                </div>
+                            </div>
+                            <div class="stat-card" style="padding:1rem;">
+                                <div class="stat-card-icon orange"><i class="fas fa-users"></i></div>
+                                <div class="stat-card-content">
+                                    <p style="font-size:0.8rem; color:#94a3b8; margin:0;">Spots Left</p>
+                                    <strong>${spotsLeft} / ${event.max_attendees}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; align-items:center; gap:1rem; flex-wrap:wrap;">
+                            ${regButtonHtml}
+                        </div>
+                    </div>
+                `;
+
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon"><i class="fas fa-exclamation-triangle"></i></div>
+                        <h3>Failed to load event</h3>
+                        <button class="btn btn-primary" onclick="loadEventDetails(${eventId})">Retry</button>
+                    </div>`;
+            }
+        }
+
+        function categoryIcon(cat) {
+            const icons = { academic:'🎓', cultural:'🎭', sports:'🏆', workshop:'🛠️', seminar:'🎤', other:'📌' };
+            return icons[cat] || '📌';
+        }
+
+        // ── Free Registration ─────────────────────────────────────────────────
+        async function registerFree(eventId) {
+            try {
+                await api.registrations.register(eventId);
+                showToast('Registered successfully!', 'success');
+                setTimeout(() => loadEventDetails(eventId), 800);
+            } catch (e) {
+                showToast(e.message, 'error');
+            }
+        }
+
+        // ── Paid Registration — first register, then show QR modal ────────────
+        async function registerAndPay(eventId) {
+            try {
+                // Register first (payment_status starts as 'not_required' until payment submitted)
+                await api.registrations.register(eventId);
+            } catch (e) {
+                // Ignore "already registered" so they can re-visit payment
+            }
+            openPaymentModal(eventId);
+        }
+
+        // ── Open QR Payment Modal ─────────────────────────────────────────────
+        async function openPaymentModal(eventId) {
+            try {
+                const event = await api.events.getById(eventId);
+                if (!event.payment_qr) {
+                    showToast('Payment QR not set by organizer yet. Contact them.', 'warning');
+                    return;
+                }
+                document.getElementById('payModalEventTitle').textContent = event.title;
+                document.getElementById('payModalPrice').textContent = `₹${parseFloat(event.price).toFixed(0)}`;
+                document.getElementById('payModalPriceStep').textContent = `₹${parseFloat(event.price).toFixed(0)}`;
+                document.getElementById('payModalQrImg').src = event.payment_qr;
+                document.getElementById('txnNoteInput').value = '';
+                document.getElementById('submitPaymentBtn').dataset.eventId = eventId;
+                document.getElementById('paymentModalOverlay').classList.add('open');
+            } catch (e) {
+                showToast('Failed to load payment info', 'error');
+            }
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModalOverlay').classList.remove('open');
+        }
+
+        // Close on backdrop click
+        document.getElementById('paymentModalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closePaymentModal();
+        });
+
+        // ── Submit Payment Confirmation ───────────────────────────────────────
+        async function submitPaymentConfirmation() {
+            const btn = document.getElementById('submitPaymentBtn');
+            const eventId = btn.dataset.eventId;
+            const note = document.getElementById('txnNoteInput').value.trim();
+
+            btn.disabled = true;
+            btn.innerHTML = '<div class="spinner" style="width:1.2rem;height:1.2rem;"></div>';
+
+            try {
+                await api.payments.confirmPayment(eventId, note);
+                showToast('Payment submitted! Waiting for organizer verification.', 'success');
+                closePaymentModal();
+                setTimeout(() => loadEventDetails(eventId), 800);
+            } catch (e) {
+                showToast(e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-circle"></i> I\'ve Paid, Submit';
+            }
+        }
+
+        // ── Cancel Registration ───────────────────────────────────────────────
+        function cancelReg(eventId) {
+            showConfirmModal(
+                '⚠️ Cancel Registration',
+                'Are you sure you want to cancel your registration for this event?',
+                async () => {
+                    try {
+                        await api.registrations.cancel(eventId);
+                        showToast('Registration cancelled successfully', 'info');
+                        loadEventDetails(eventId);
+                    } catch (e) { showToast(e.message || 'Failed to cancel', 'error'); }
+                }
+            );
+        }
+
+        // ── Confirm Modal ─────────────────────────────────────────────────────
+        function showConfirmModal(title, message, onConfirm) {
+            document.getElementById('confirmModalTitle').textContent = title;
+            document.getElementById('confirmModalMessage').textContent = message;
+            document.getElementById('confirmModalOverlay').classList.add('open');
+            document.getElementById('confirmModalConfirmBtn').onclick = async () => {
+                closeConfirmModal();
+                await onConfirm();
+            };
+        }
+        function closeConfirmModal() {
+            document.getElementById('confirmModalOverlay').classList.remove('open');
+        }
+        document.getElementById('confirmModalOverlay').addEventListener('click', function(e) {
+            if (e.target === this) closeConfirmModal();
+        });
+    </script>
+    <script src="js/3d-effects.js"></script>
+</body>
+</html>
