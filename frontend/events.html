@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Events - College Event Registration System</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- 🎨 PARTICLE CANVAS -->
+    <canvas id="particleCanvas"></canvas>
+    <div class="page-wrapper">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="navbar-container">
+                <a href="index.html" class="navbar-brand">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>EventHub</span>
+                </a>
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="navbar-menu" id="navbarMenu"></div>
+                <div class="navbar-user" id="navbarUser"></div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="container">
+                <div class="events-header">
+                    <h1>All Events</h1>
+                    <div class="d-flex gap-2" style="flex-wrap: wrap;">
+                        <input type="text" class="form-control" placeholder="Search events..." 
+                               id="searchInput" style="width: 200px;">
+                        <select class="form-control" id="categoryFilter" style="width: 150px;" onchange="applyFilters()">
+                            <option value="all">All Categories</option>
+                            <option value="academic">Academic</option>
+                            <option value="cultural">Cultural</option>
+                            <option value="sports">Sports</option>
+                            <option value="workshop">Workshop</option>
+                            <option value="seminar">Seminar</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <input type="date" class="form-control" id="dateFilter" style="width: 150px;" onchange="applyFilters()">
+                        <button class="btn btn-primary" onclick="applyFilters()">
+                            <i class="fas fa-filter"></i> Filter
+                        </button>
+                    </div>
+                </div>
+
+                <div class="events-filters mb-3">
+                    <button class="filter-btn active" data-filter="upcoming">Upcoming</button>
+                    <button class="filter-btn" data-filter="all">All Events</button>
+                </div>
+
+                <div class="events-grid" id="eventsGrid">
+                    <div class="loading"><div class="spinner"></div></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer style="background: var(--gray-800); color: var(--gray-300); padding: 2rem 0; margin-top: auto;">
+            <div class="container text-center">
+                <p>&copy; 2026 College Event Registration System. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="js/api.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/events.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        let currentFilters = { upcoming: 'true' };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // Check URL params
+            const params = new URLSearchParams(window.location.search);
+            const category = params.get('category');
+            const search = params.get('search');
+
+            if (category) {
+                document.getElementById('categoryFilter').value = category;
+                currentFilters.category = category;
+            }
+            if (search) {
+                document.getElementById('searchInput').value = search;
+                currentFilters.search = search;
+            }
+
+            loadEvents('eventsGrid', currentFilters);
+
+            // Filter buttons
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    if (this.dataset.filter === 'upcoming') {
+                        currentFilters.upcoming = 'true';
+                    } else {
+                        delete currentFilters.upcoming;
+                    }
+                    
+                    loadEvents('eventsGrid', currentFilters);
+                });
+            });
+        });
+
+        function applyFilters() {
+            const search = document.getElementById('searchInput').value;
+            const category = document.getElementById('categoryFilter').value;
+            const date = document.getElementById('dateFilter').value;
+
+            currentFilters = {};
+            
+            if (search) currentFilters.search = search;
+            if (category && category !== 'all') currentFilters.category = category;
+            if (date) currentFilters.date = date;
+
+            // Keep upcoming filter if active
+            if (document.querySelector('.filter-btn.active')?.dataset.filter === 'upcoming') {
+                currentFilters.upcoming = 'true';
+            }
+
+            loadEvents('eventsGrid', currentFilters);
+        }
+
+        // Search on enter
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') applyFilters();
+        });
+    </script>
+    <script src="js/3d-effects.js"></script>
+</body>
+</html>

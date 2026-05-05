@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EventHub — College Event Registration</title>
+    <meta name="description" content="Discover, register, and experience college events like never before. EventHub is your gateway to campus life.">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        /* ── Landing page specific ── */
+        .landing-hero {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            padding: 6rem 2rem 4rem;
+            overflow: hidden;
+        }
+
+        /* Atmospheric spotlight behind hero */
+        .hero-glow {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -60%);
+            width: 700px; height: 700px;
+            background: radial-gradient(circle, rgba(99,102,241,0.35) 0%, rgba(139,92,246,0.15) 40%, transparent 70%);
+            pointer-events: none;
+            animation: glowPulse 6s ease-in-out infinite;
+            will-change: opacity, transform;
+        }
+
+        .hero-eyebrow {
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: #818cf8;
+            margin-bottom: 1.5rem;
+            opacity: 0;
+            animation: fadeSlideUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.2s forwards;
+        }
+
+        .hero-headline {
+            font-size: clamp(3rem, 8vw, 7rem);
+            font-weight: 900;
+            line-height: 1.0;
+            letter-spacing: -0.03em;
+            color: #f1f5f9;
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .hero-headline .line {
+            display: block;
+            overflow: hidden;
+        }
+
+        .hero-headline .line span {
+            display: block;
+            opacity: 0;
+            transform: translateY(100%);
+            animation: lineReveal 0.9s cubic-bezier(0.16,1,0.3,1) forwards;
+        }
+        .hero-headline .line:nth-child(1) span { animation-delay: 0.35s; }
+        .hero-headline .line:nth-child(2) span { animation-delay: 0.55s; }
+        .hero-headline .line:nth-child(3) span { animation-delay: 0.70s; }
+
+        @keyframes lineReveal {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .hero-sub {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            max-width: 520px;
+            margin: 0 auto 2.5rem;
+            line-height: 1.7;
+            opacity: 0;
+            animation: fadeSlideUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.9s forwards;
+        }
+
+        .hero-cta-group {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            opacity: 0;
+            animation: fadeSlideUp 0.8s cubic-bezier(0.16,1,0.3,1) 1.05s forwards;
+        }
+
+        .btn-hero-primary {
+            padding: 0.9rem 2.2rem;
+            background: linear-gradient(135deg, #6366f1, #8b5cf6);
+            color: #fff;
+            border: none;
+            border-radius: 3rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 0 30px rgba(99,102,241,0.4);
+            text-decoration: none;
+            display: inline-flex; align-items: center; gap: 0.5rem;
+        }
+        .btn-hero-primary:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 0 50px rgba(99,102,241,0.6);
+            color: #fff;
+        }
+
+        .btn-hero-outline {
+            padding: 0.9rem 2.2rem;
+            background: transparent;
+            color: #94a3b8;
+            border: 1px solid rgba(99,102,241,0.3);
+            border-radius: 3rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex; align-items: center; gap: 0.5rem;
+        }
+        .btn-hero-outline:hover {
+            border-color: rgba(99,102,241,0.7);
+            color: #a5b4fc;
+            transform: translateY(-2px);
+        }
+
+        .hero-stats-row {
+            display: flex;
+            gap: 3rem;
+            justify-content: center;
+            margin-top: 5rem;
+            opacity: 0;
+            animation: fadeSlideUp 0.8s cubic-bezier(0.16,1,0.3,1) 1.25s forwards;
+        }
+        .hero-stat-item { text-align: center; }
+        .hero-stat-num {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #e2e8f0;
+            line-height: 1;
+            background: linear-gradient(135deg, #a5b4fc, #c4b5fd);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hero-stat-label { font-size: 0.82rem; color: #64748b; margin-top: 0.3rem; letter-spacing: 0.05em; text-transform: uppercase; }
+
+        /* ── Scroll indicator ── */
+        .scroll-hint {
+            position: absolute;
+            bottom: 2.5rem; left: 50%;
+            transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+            opacity: 0;
+            animation: fadeSlideUp 0.8s ease 1.6s forwards;
+        }
+        .scroll-hint span { font-size: 0.72rem; color: #475569; letter-spacing: 0.12em; text-transform: uppercase; }
+        .scroll-line {
+            width: 1px; height: 50px;
+            background: linear-gradient(to bottom, rgba(99,102,241,0.8), transparent);
+            animation: scrollPulse 2s ease-in-out infinite;
+        }
+        @keyframes scrollPulse {
+            0%,100% { transform: scaleY(1); opacity: 1; }
+            50%      { transform: scaleY(0.5); opacity: 0.4; }
+        }
+
+        /* ── Feature section ── */
+        .features-section {
+            padding: 8rem 2rem;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+        .section-label {
+            font-size: 0.78rem; font-weight: 600; letter-spacing: 0.2em;
+            text-transform: uppercase; color: #6366f1;
+            margin-bottom: 1rem;
+        }
+        .section-headline {
+            font-size: clamp(2rem, 4vw, 3.2rem);
+            font-weight: 800; line-height: 1.1;
+            color: #e2e8f0; margin-bottom: 1rem;
+        }
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 4rem;
+        }
+        .feature-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(99,102,241,0.12);
+            border-radius: 1.25rem;
+            padding: 2rem;
+            transition: border-color 0.3s ease, background 0.3s ease, transform 0.3s ease;
+        }
+        .feature-card:hover {
+            border-color: rgba(99,102,241,0.35);
+            background: rgba(99,102,241,0.06);
+            transform: translateY(-4px);
+        }
+        .feature-icon {
+            width: 48px; height: 48px;
+            border-radius: 0.75rem;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem;
+            margin-bottom: 1.25rem;
+        }
+        .feature-icon.purple { background: rgba(139,92,246,0.2); color: #a78bfa; }
+        .feature-icon.blue   { background: rgba(59,130,246,0.2);  color: #60a5fa; }
+        .feature-icon.green  { background: rgba(16,185,129,0.2);  color: #34d399; }
+        .feature-icon.orange { background: rgba(245,158,11,0.2);  color: #fbbf24; }
+        .feature-title { font-size: 1.1rem; font-weight: 700; color: #e2e8f0; margin-bottom: 0.5rem; }
+        .feature-desc  { font-size: 0.9rem; color: #64748b; line-height: 1.6; }
+
+        /* ── CTA banner ── */
+        .cta-section {
+            padding: 6rem 2rem;
+            text-align: center;
+            position: relative;
+        }
+        .cta-glow {
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%,-50%);
+            width: 600px; height: 300px;
+            background: radial-gradient(ellipse, rgba(99,102,241,0.2) 0%, transparent 70%);
+            pointer-events: none;
+            animation: glowPulse 5s ease-in-out infinite;
+        }
+        .cta-headline {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 900; line-height: 1.1;
+            color: #f1f5f9; margin-bottom: 1rem;
+        }
+        .cta-sub { color: #64748b; font-size: 1rem; margin-bottom: 2.5rem; }
+
+        /* Divider line */
+        .divider { height: 1px; background: linear-gradient(to right, transparent, rgba(99,102,241,0.3), transparent); margin: 0 4rem; }
+    </style>
+</head>
+<body>
+<canvas id="particleCanvas"></canvas>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+    <div class="navbar-container">
+        <a href="index.html" class="navbar-brand">
+            <i class="fas fa-graduation-cap"></i>
+            <span>EventHub</span>
+        </a>
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="navbar-menu" id="navbarMenu"></div>
+        <div class="navbar-user" id="navbarUser"></div>
+    </div>
+</nav>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<section class="landing-hero">
+    <div class="hero-glow"></div>
+
+    <p class="hero-eyebrow"><i class="fas fa-graduation-cap"></i> &nbsp; College Event Platform</p>
+
+    <h1 class="hero-headline">
+        <span class="line"><span>Discover.</span></span>
+        <span class="line"><span>Register.</span></span>
+        <span class="line"><span>Experience.</span></span>
+    </h1>
+
+    <p class="hero-sub">
+        Your all-in-one platform for finding and joining college events — workshops, seminars, sports, and more.
+    </p>
+
+    <div class="hero-cta-group">
+        <a href="events.html" class="btn-hero-primary">
+            <i class="fas fa-calendar-alt"></i> Browse Events
+        </a>
+        <a href="register.html" class="btn-hero-outline" id="landingRegisterBtn">
+            <i class="fas fa-user-plus"></i> Join Free
+        </a>
+    </div>
+
+    <div class="hero-stats-row" id="heroStatsRow">
+        <div class="hero-stat-item">
+            <div class="hero-stat-num" id="statEvents">—</div>
+            <div class="hero-stat-label">Events</div>
+        </div>
+        <div class="hero-stat-item">
+            <div class="hero-stat-num" id="statUsers">—</div>
+            <div class="hero-stat-label">Students</div>
+        </div>
+        <div class="hero-stat-item">
+            <div class="hero-stat-num" id="statRegs">—</div>
+            <div class="hero-stat-label">Registrations</div>
+        </div>
+    </div>
+
+    <div class="scroll-hint">
+        <div class="scroll-line"></div>
+        <span>Scroll</span>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════ FEATURES ═══════════════════ -->
+<section class="features-section">
+    <p class="section-label reveal-fade">Why EventHub?</p>
+    <h2 class="section-headline reveal-up">Everything you need<br>for campus events.</h2>
+
+    <div class="features-grid">
+        <div class="feature-card reveal-up delay-100">
+            <div class="feature-icon purple"><i class="fas fa-search"></i></div>
+            <h3 class="feature-title">Smart Discovery</h3>
+            <p class="feature-desc">Filter by category, date, and availability. Find the perfect event in seconds.</p>
+        </div>
+        <div class="feature-card reveal-up delay-200">
+            <div class="feature-icon blue"><i class="fas fa-bolt"></i></div>
+            <h3 class="feature-title">Instant Registration</h3>
+            <p class="feature-desc">One-click registration with real-time spot tracking and automatic confirmations.</p>
+        </div>
+        <div class="feature-card reveal-up delay-300">
+            <div class="feature-icon green"><i class="fas fa-qrcode"></i></div>
+            <h3 class="feature-title">QR Payments</h3>
+            <p class="feature-desc">Organizers can attach UPI QR codes. Pay instantly through PhonePe, GPay or any UPI app.</p>
+        </div>
+        <div class="feature-card reveal-up delay-100">
+            <div class="feature-icon orange"><i class="fas fa-bell"></i></div>
+            <h3 class="feature-title">Live Notifications</h3>
+            <p class="feature-desc">Get notified about new events, registration confirmations, and payment updates.</p>
+        </div>
+        <div class="feature-card reveal-up delay-200">
+            <div class="feature-icon purple"><i class="fas fa-chart-bar"></i></div>
+            <h3 class="feature-title">Organizer Dashboard</h3>
+            <p class="feature-desc">Create events, manage attendees, verify payments and track registrations in one place.</p>
+        </div>
+        <div class="feature-card reveal-up delay-300">
+            <div class="feature-icon blue"><i class="fas fa-shield-alt"></i></div>
+            <h3 class="feature-title">Role-Based Access</h3>
+            <p class="feature-desc">Secure login for students, organizers, and admins — everyone sees exactly what they need.</p>
+        </div>
+    </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════ CTA BANNER ═══════════════════ -->
+<section class="cta-section">
+    <div class="cta-glow"></div>
+    <p class="section-label reveal-fade">Ready to start?</p>
+    <h2 class="cta-headline reveal-up">Don't miss out on<br>campus life.</h2>
+    <p class="cta-sub reveal-up delay-200">Join hundreds of students already using EventHub.</p>
+    <div class="reveal-up delay-300">
+        <a href="events.html" class="btn-hero-primary" style="margin-right:1rem;">
+            <i class="fas fa-calendar-alt"></i> View All Events
+        </a>
+        <a href="register.html" id="ctaRegisterBtn" class="btn-hero-outline">
+            <i class="fas fa-user-plus"></i> Create Account
+        </a>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer style="padding: 2rem 0; text-align:center; border-top: 1px solid rgba(99,102,241,0.1);">
+    <p>&copy; <span id="year"></span> College Event Registration System. All rights reserved.</p>
+</footer>
+
+<!-- JS -->
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/3d-effects.js"></script>
+<script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    // Load live stats
+    (async () => {
+        try {
+            // Try fetching events count
+            const eventsData = await api.events.getAll({ limit: 1 });
+            // Fetch all for count
+            const all = await api.events.getAll();
+            const count = Array.isArray(all) ? all.length : (all.events?.length || 0);
+            animateCount('statEvents', count || '10+');
+            animateCount('statUsers', '200+');
+            animateCount('statRegs', '500+');
+        } catch {
+            // Fallback display numbers
+            document.getElementById('statEvents').textContent = '10+';
+            document.getElementById('statUsers').textContent  = '200+';
+            document.getElementById('statRegs').textContent   = '500+';
+        }
+    })();
+
+    function animateCount(id, target) {
+        const el = document.getElementById(id);
+        if (!el || typeof target === 'string') { el.textContent = target; return; }
+        let cur = 0;
+        const step = Math.ceil(target / 30);
+        const timer = setInterval(() => {
+            cur = Math.min(cur + step, target);
+            el.textContent = cur;
+            if (cur >= target) clearInterval(timer);
+        }, 40);
+    }
+
+    // Hide "Join Free" if already logged in
+    document.addEventListener('DOMContentLoaded', () => {
+        const user = auth.getUser();
+        if (user) {
+            const regBtn = document.getElementById('landingRegisterBtn');
+            const ctaBtn = document.getElementById('ctaRegisterBtn');
+            if (regBtn) { regBtn.textContent = ''; regBtn.innerHTML = '<i class="fas fa-tachometer-alt"></i> Dashboard'; regBtn.href = 'dashboard.html'; }
+            if (ctaBtn) { ctaBtn.innerHTML = '<i class="fas fa-tachometer-alt"></i> Go to Dashboard'; ctaBtn.href = 'dashboard.html'; }
+        }
+    });
+</script>
+</body>
+</html>
